@@ -292,7 +292,7 @@ function Find-Variable() {
     )
     Begin {
         $Pattern = '(?<!\w)\$\w+'
-        $Occurrences = [regex]::Matches($Payload, $Pattern).Value | Where-Object { $_ -notlike '$_*' } | Select-Object -Unique
+        $Occurrences = [regex]::Matches($Payload, $Pattern).Value | Where-Object { $_ -notlike '$_*' -and $_ -ne '$true' -and $_ -ne '$false' } | Select-Object -Unique
     }
     Process { 
         Try { 
