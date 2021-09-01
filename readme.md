@@ -66,7 +66,9 @@ The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's th
 
 ## Supported Payloads
 
-When I was building out this tool, I was focusing on the reverse shell payload, which is also how I tested out the generators. In theory, this solution should work with virtually any script that runs on the above-mentioned PowerShell version, but please be sure you test your script in the event you decide to run this against more complex payloads. I am planning on continually supporting and updating this as time goes by.
+When I was building out this tool, I was focusing on the reverse shell payload below, which is also how I tested out the compatibility of the generators. 
+
+_09/01/2021 Update: I am building a new version with two modes, ReverseShell and AdvancedPayload. The current script is built for ReverseShell but I am building out a new version to support more advanced payloads, such as the PowerShell exploits for CVE-2021-34527._
 
 ### Reverse Shell One-Liner
 
