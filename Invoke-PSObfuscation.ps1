@@ -592,7 +592,6 @@ function Get-ObfuscatedNamespace() {
         return $NewValue
     }
 }
-
 function Find-Namespace() {
     <#
     .SYNOPSIS
@@ -617,7 +616,8 @@ function Find-Namespace() {
         [System.String]$Payload
     )
     Begin {
-        $Occurrences = 'System.Net.Sockets.TCPClient', 'System.Text.ASCIIEncoding'
+        $Pattern = '(?<!\[)System\.IO\.MemoryStream|System\.IO\.Compression\.GZipStream|System\.Net\.Sockets\.TCPClient|System\.Text\.ASCIIEncoding|System\.Text\.UnicodeEncoding|System\.IO\.Compression\.CompressionMode(?!\])'
+        $Occurrences = [regex]::Matches($Payload, $Pattern).Value | Select-Object -Unique
     }
     Process {  
         Try {
@@ -1369,7 +1369,7 @@ Function Invoke-PSObfuscation() {
         Write-Output '[*] Converting into a single line'
         $Obfuscated = ConvertTo-OneLine -Payload $Content
 
-        # Insert socket ip address and port number beacons to prevent formatting conflicts from other functions
+        ## Insert socket ip address and port number beacons to prevent formatting conflicts from other functions
         Write-Output '[*] Inserting socket beacons'
         $Obfuscated = Format-SocketBeacons -Payload $Obfuscated -IPAddress -Port
 
