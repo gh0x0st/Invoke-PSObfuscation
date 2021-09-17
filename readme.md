@@ -7,6 +7,16 @@ This new version focuses on replacing individual components of code with alterna
 I wrote a blog piece for Offensive Security as a precursor into the techniques this tool introduces. Before venturing further, consider giving it a read first:
 https://www.offensive-security.com/offsec/powershell-obfuscation/
 
+## Updates
+
+_Known Issues_
+
+09/03/2021 - If you are trying to obfuscate an advanced payload that uses advanced functions with custom parameters and you call that function within the same script, it will replace the parameter declaration variable but will not update the named parameter. This is corrected in the next release.
+
+_Coming Soon_
+
+09/17/2021 - I am almost finished a quality of life update to make this tool easier to use. It will also include changes that will aid in obfuscating advanced payloads such as the PowerShell exploit for CVE-2021-34527.
+
 ## Background
 
 PowerShell obfuscation is a topic I have always been passionate about which has largely been due to my love of brain teasers. Throughout the years, I've relied on different types of layering techniques, but I'm starting to find that they're becoming less reliable. As a pre
@@ -63,10 +73,6 @@ This framework and resulting payloads have been tested on the following operatin
 | 5.1.21996.1 | Windows 11 10.0.21996 | Supported | Supported
 
 The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's the love for the older versions of PowerShell?_ Initially, my intention was to design this for the newer version of PowerShell. Depending on how well this tool is received, I am planning on making PowerShell v2.0 derivative of this tool called `Invoke-PS2Obfuscation`. 
-
-## Supported Payloads
-
-When I was building out this tool, I was focusing on the reverse shell payload below, which is also how I tested out the compatibility of the generators. However, I am building an upgraded version of this tool to support more advanced payloads, such as the PowerShell exploit for CVE-2021-34527.
 
 ### Reverse Shell One-Liner
 
