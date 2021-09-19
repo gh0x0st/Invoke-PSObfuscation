@@ -19,7 +19,7 @@ _Coming Soon_
 
 ## Background
 
-PowerShell obfuscation is a topic I have always been passionate about which has largely been due to my love of brain teasers. Throughout the years, I've relied on different types of layering techniques, but I'm starting to find that they're becoming less reliable. As a pre
+PowerShell obfuscation is a topic I have always been passionate about which has largely been due to my love of brain teasers. Throughout the years, I've relied on different types of layering techniques, but I'm starting to find that they're becoming less reliable.
 
 Therefore, I started my research into different ways I could obfuscate my payloads beyond what I typically would use. To branch away from the layering techniques I relied on, I started to target individual components and all the different ways I could think of to change how they're represented. More importantly, I wanted a way that would allow me to easily target specific components so I could determine how much or how little obfuscation I needed to bypass security checks, such as AMSI.
 
