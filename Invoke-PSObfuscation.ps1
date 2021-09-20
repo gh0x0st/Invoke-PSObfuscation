@@ -1138,7 +1138,7 @@ Function Get-ObfuscatedInteger() {
         [System.String]$Integer
     )
     Begin {
-        $Picker = 1..3 | Get-Random
+        $Picker = 1..2 | Get-Random
         If ($ShowChanges) {
             Write-Host -NoNewline "    Generator $($Picker) >> "
         }
@@ -1175,14 +1175,6 @@ Function Get-ObfuscatedInteger() {
                 else {
                     $NewValue = '$' + "($NewValue)"   
                 }
-            }
-            3 {
-                # Generates a two random strings by selecting at random, up to 10 characters from the given character set. The integer value will be placed in the of the string.
-                # The string is the appended with a regex replace within in a grouping constructor so that when excuted the original integer is evaluated. 
-                $FirstHalf = ''''+(('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.ToCharArray() | Get-Random -Count (1..10 | Get-Random) | ForEach-Object { $_ }) -join '')
-                $SecondHalf = (('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.ToCharArray() | Get-Random -Count (1..10 | Get-Random) | ForEach-Object { $_ }) -join '') + ''''
-                $NewValue = Get-OperatorEncapsulation -Value $($FirstHalf + $Integer + $SecondHalf + ' -Replace "[^0-9]"')
-                
             }
         }
     }
