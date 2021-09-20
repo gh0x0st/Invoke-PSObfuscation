@@ -14,6 +14,5 @@
 * Fixed a conflict where Find-Variables would not properly replace variables that are associated to parameters in custom functions as well as their parameter deriviate
 * Removed functions ConvertTo-OneLine, Format-SocketBeacons, Get-ObfuscatedIpAddress and Find-Listener
 * Removed switch parameters IPAddress, Port, Listener
-* Added a new generator for Get-ObfuscatedInteger
 * Added component support for single line and multi-line comment removal
 * Updated functions Find-Cmdlet, Find-Integer and Remove-Aliases to utilize [System.Management.Automation.PSParser] for parsing out components in a payload vs regex
