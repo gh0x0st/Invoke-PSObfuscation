@@ -16,4 +16,4 @@
 * Removed switch parameters IPAddress, Port, Listener
 * Added a new generator for Get-ObfuscatedInteger
 * Added component support for single line and multi-line comment removal
-* Updated functions Find-Cmdlet, Find-Integer, Remove-Aliases and Find-Variable to utilize [System.Management.Automation.PSParser] for parsing out components in a payload vs regex
+* Updated functions Find-Cmdlet, Find-Integer and Remove-Aliases to utilize [System.Management.Automation.PSParser] for parsing out components in a payload vs regex
