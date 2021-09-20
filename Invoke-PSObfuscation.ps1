@@ -421,24 +421,15 @@ function Find-Variable() {
         [System.String]$Payload
     )
     Begin {
-        # Variables
-        #$Pattern = '(?<!\w)\$\w+'
-        #$Variables = [regex]::Matches($Payload, $Pattern).Value | Where-Object { $_ -notlike '$_*' -and $_ -ne '$true' -and $_ -ne '$false' } | Select-Object -Unique
-        $Variables = [System.Management.Automation.PSParser]::Tokenize($Payload,[ref]$null) | Where-Object {$_.Type -eq 'Variable' -and  $_.Content -notlike '$_*' -and $_ -ne '$true' -and $_ -ne '$false' } | Select-Object -ExpandProperty Content -Unique | % {'$' + $_}
-        
-        # Parametersa
+        $Pattern = '(?<!\w)\$\w+'
+        $Variables = [regex]::Matches($Payload, $Pattern).Value | Where-Object { $_ -notlike '$_*' -and $_ -ne '$true' -and $_ -ne '$false' } | Select-Object -Unique
         $Pattern = '.PARAMETER\s(\w+)'
         $Parameters = [regex]::Matches($Payload, $Pattern).Value | % { '$' + ($_ -split '\s')[1] }
 
-        # Do not touch the automatic variables
-        $Blacklist = '$_','$?', '$^', '$args', '$ConfirmPreference', '$ConsoleFileName', '$DebugPreference', '$Error', '$ErrorActionPreference', '$ErrorView', '$ExecutionContext', '$False','$false', '$FormatEnumerationLimit', '$HOME', '$Host', '$InformationPreference', '$input', '$LASTEXITCODE', '$MaximumAliasCount', '$MaximumDriveCount', '$MaximumErrorCount', '$MaximumFunctionCount', '$MaximumHistoryCount', '$MaximumVariableCount', '$MyInvocation', '$NestedPromptLevel', '$null','$NULL', '$OutputEncoding', '$PID', '$PROFILE', '$ProgressPreference', '$PSBoundParameters', '$PSCommandPath', '$PSCulture', '$PSDefaultParameterValues', '$PSEdition', '$PSEmailServer', '$PSHOME', '$PSScriptRoot', '$PSSessionApplicationName', '$PSSessionConfigurationName', '$PSSessionOption', '$PSUICulture', '$PSVersionTable', '$PWD', '$ShellId', '$StackTrace', '$True', '$true', '$VerbosePreference', '$WarningPreference', '$WhatIfPreference'
-        
-        # Misc blacklisted variable names
-        $Blacklist = $Blacklist + '$Position', '$Ocpffset', '$MarshalAs', '$DllName', '$FunctionName', '$EntryPoint', '$ReturnType', '$ParameterTypes', '$NativeCallingConvention', '$Charset', '$SetLastError', '$Namespace'
-        # '$Module'
-        # Final list work from
-        #$Variables = Compare-Object -ReferenceObject $Blacklist -DifferenceObject $Variables | ? { $_.SideIndicator -eq '=>' } | Select -ExpandProperty InputObject
-        $Variables = $Variables | Where-Object {$_ -notin $Blacklist}
+        # Do not touch the built in variables
+        $Blacklist = '$?', '$^', '$args', '$ConfirmPreference', '$ConsoleFileName', '$DebugPreference', '$Error', '$ErrorActionPreference', '$ErrorView', '$ExecutionContext', '$false', '$FormatEnumerationLimit', '$HOME', '$Host', '$InformationPreference', '$input', '$LASTEXITCODE', '$MaximumAliasCount', '$MaximumDriveCount', '$MaximumErrorCount', '$MaximumFunctionCount', '$MaximumHistoryCount', '$MaximumVariableCount', '$MyInvocation', '$NestedPromptLevel', '$null', '$OutputEncoding', '$PID', '$PROFILE', '$ProgressPreference', '$PSBoundParameters', '$PSCommandPath', '$PSCulture', '$PSDefaultParameterValues', '$PSEdition', '$PSEmailServer', '$PSHOME', '$PSScriptRoot', '$PSSessionApplicationName', '$PSSessionConfigurationName', '$PSSessionOption', '$PSUICulture', '$PSVersionTable', '$PWD', '$ShellId', '$StackTrace', '$true', '$VerbosePreference', '$WarningPreference', '$WhatIfPreference'
+        $Blacklist = $Blacklist + '$Position', '$Ocpffset', '$MarshalAs', '$DllName', '$FunctionName', '$EntryPoint', '$ReturnType', '$ParameterTypes', '$NativeCallingConvention', '$Charset', '$SetLastError', '$Module', '$Namespace'
+        $Variables = Compare-Object -ReferenceObject $Blacklist -DifferenceObject $Variables | ? { $_.SideIndicator -eq '=>' } | Select -ExpandProperty InputObject
     }
     Process { 
         Try { 
@@ -457,12 +448,13 @@ function Find-Variable() {
                 $ToReplace = $($_.InputObject) -replace '\$', '-'
                 $ReplaceWith = $($NewValue -replace '\$', '-')
 
+                
                 $Pattern = '{0}\b' -f $ToReplace
-                $Payload = $Payload -replace $Pattern, $ReplaceWith
+                $Payload = $Payload -replace $Pattern, $ReplaceWith 
 
-                # Will always show these changes to help people in the event they need to know the new parameter names
+                # Show Changes
                 if ($ShowChanges) {
-                    Write-Host "$ToReplace is now $ReplaceWith"
+                    Write-Host "$ToReplace >> $ReplaceWith"
                 } else {
                     Write-Host "[-] $ToReplace is now $ReplaceWith"
                 }
@@ -491,6 +483,8 @@ function Find-Variable() {
         return $Payload
     }
 }
+
+
 
 function Get-ObfuscatedCmdlet() {
     <#
