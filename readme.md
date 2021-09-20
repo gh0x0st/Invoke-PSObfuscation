@@ -58,7 +58,7 @@ The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's th
 
 * Building out a cleaner Find-Variables function that will utilize [System.Management.Automation.PSParser]
 * Building out a safer version of Find-String which will include logic to skip massive strings
-* A reference guide on how to approach obfuscating larger and more complex payloads
+* Adding component support for custom function names
 
 ## Usage Examples
 
