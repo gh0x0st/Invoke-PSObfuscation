@@ -1,3 +1,181 @@
+Function Invoke-PSObfuscation() {
+    <#
+    .SYNOPSIS
+        Transforms PowerShell scripts into something obscure, unclear, or unintelligible.
+    
+    .DESCRIPTION
+        Where most obfuscation tools tend to add layers to encapsulate standing code, such as base64 or compression, 
+        they tend to leave the intended payload intact, which essentially introduces chokepoints. Invoke-PSObfuscation 
+        focuses on replacing the existing components of your code, or layer 0, with alternative values. 
+    
+    .PARAMETER Path
+        A user provided PowerShell payload via a flat file.
+    
+    .PARAMETER All
+        The all switch is used to engage every supported component to obfuscate a given payload. This action is very intrusive
+        and could result in your payload being broken. There should be no issues when using this with the vanilla reverse
+        shell. However, it's recommended to target specific components with more advanced payloads. Keep in mind that some of 
+        the generators introduced in this script may even confuse your ISE so be sure to test properly.
+        
+    .PARAMETER Aliases
+        The aliases switch is used to instruct the function to obfuscate aliases.
+
+    .PARAMETER Cmdlets
+        The cmdlets switch is used to instruct the function to obfuscate cmdlets.
+
+    .PARAMETER Comments
+        The comments switch is used to instruct the function to remove all comments.
+
+    .PARAMETER Integers
+        The integers switch is used to instruct the function to obfuscate integers.
+
+    .PARAMETER Methods
+        The methods switch is used to instruct the function to obfuscate method invocations.
+
+    .PARAMETER NamespaceClasses
+        The namespaceclasses switch is used to instruct the function to obfuscate namespace classes.
+    
+    .PARAMETER Pipes
+        The pipes switch is used to instruct the function to obfuscate pipes.
+
+    .PARAMETER PipelineVariables
+        The pipeline variables switch is used to instruct the function to obfuscate pipeline variables.
+
+    .PARAMETER ShowChanges
+        The ShowChanges switch is used to instruct the script to display the raw and obfuscated values on the screen.
+
+    .PARAMETER Strings
+        The strings switch is used to instruct the function to obfuscate prompt strings.
+  
+    .PARAMETER Variables
+        The variables switch is used to instruct the function to obfuscate variables.
+
+    .EXAMPLE
+        PS C:\> Invoke-PSObfuscation -Path .\revshell.ps1 -All
+    
+    .EXAMPLE
+        PS C:\> Invoke-PSObfuscation -Path .\CVE-2021-34527.ps1 -Cmdlets -Comments -NamespaceClasses -Variables -OutFile o-printernightmare.ps1
+    
+    .OUTPUTS
+        System.String, System.String
+    
+    .NOTES
+        Additional information about the function.
+    #>
+    [CmdletBinding()]
+    [OutputType([System.String])]
+    param
+    (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [System.String]$Path,
+        [Parameter(Mandatory = $false, Position = 2)]
+        [System.String]$OutFile = (Join-Path -Path $(Get-Location) -ChildPath 'obfuscated.ps1'),
+        [switch]$All,
+        [switch]$Aliases,
+        [switch]$Cmdlets,
+        [switch]$Comments,
+        [switch]$Methods,
+        [switch]$Integers,
+        [switch]$NamespaceClasses,
+        [switch]$Pipes,
+        [switch]$PipelineVariables,
+        [switch]$Strings,
+        [switch]$Variables,
+        [switch]$ShowChanges
+    )
+    Begin {
+        Write-Output ''
+        Write-Output '     >> Layer 0 Obfuscation'
+        Write-Output '     >> https://github.com/gh0x0st'
+        Write-Output ''
+
+        $Content = [System.IO.File]::ReadAllLines( ( Resolve-Path $Path ))
+
+    }
+    Process {
+        # Check if we are using at least one parameter
+        if (!($All -or $Aliases -or $Comments -or $Methods -or $Strings -or $Variables -or $Pipes -or $Cmdlets -or $Integers -or $NamespaceClasses -or $PipelineVariables -or $Listener) ) {
+            Write-Output '[!] You must include at least one switch parameter'
+            Write-Output ''
+            break
+        }
+        else {
+            $Obfuscated = $Content | Out-String
+        }
+
+        # Are we running everything?
+        if ($All) {
+            $Aliases = $true
+            $Cmdlets = $true
+            $Comments = $true
+            $Integers = $true
+            $Methods = $true
+            $NamespaceClasses = $true
+            $Pipes = $true
+            $PipelineVariables = $true
+            $Strings = $true
+            $Variables = $true
+        }
+
+        # Obfuscate the things with the code
+        if ($Aliases) {
+            Write-Output '[*] Resolving aliases'
+            $Obfuscated = Resolve-Aliases -Payload $Obfuscated
+        } 
+
+        if ($Integers) {
+            Write-Output "[*] Obfuscating integers"
+            $Obfuscated = Find-Integer -Payload $Obfuscated
+        }
+
+        if ($Strings) {
+            Write-Output '[*] Obfuscating strings'
+            $Obfuscated = Find-String -Payload $Obfuscated
+        }
+
+        if ($NamespaceClasses) {
+            Write-Output "[*] Obfuscating namespace classes"
+            $Obfuscated = Find-NameSpace -Payload $Obfuscated
+        }
+
+        if ($Cmdlets) {
+            Write-Output "[*] Obfuscating cmdlets"
+            $Obfuscated = Find-Cmdlet -Payload $Obfuscated
+        }
+
+        if ($Pipes) {
+            Write-Output "[*] Obfuscating pipes"
+            $Obfuscated = Find-Pipe -Payload $Obfuscated
+        }
+
+        if ($PipelineVariables) {
+            Write-Output "[*] Obfuscating pipeline variables"
+            $Obfuscated = Find-PipelineVariable -Payload $Obfuscated
+        }
+
+        if ($Variables) {
+            Write-Output "[*] Obfuscating variables"
+            $Obfuscated = Find-Variable -Payload $Obfuscated
+        }
+
+        if ($Methods) {
+            Write-Output '[*] Obfuscating method invocations'
+            $Obfuscated = Find-Method -Payload $Obfuscated
+        }
+
+        if ($Comments) {
+            Write-Output "[*] Removing comments"
+            $Obfuscated = Remove-Comments -Payload $Obfuscated
+        }
+    }
+    End {
+        $Obfuscated | Out-File $Outfile
+        Write-Output "[*] Writing payload to $Outfile"
+        Write-Output '[*] Done'
+        Write-Output ""
+    }
+}
+
 Function New-EncodedBeacon() {
     <#
     .SYNOPSIS
@@ -39,19 +217,19 @@ Function New-EncodedBeacon() {
     }
 }
 
-function ConvertTo-OneLine {
+function Remove-Comments {
     <#
     .SYNOPSIS
-        Converts a given payload to a single line.
+        Removes comments from a given payload.
     
     .DESCRIPTION
-        Payloads are loaded as a string array and joined together with a semicolon to allow for single line conversions.
+        Removes all instances of single line comment and multi-line block comments.
     
     .PARAMETER Payload
         The payload containing the PowerShell script to be converted.
     
     .EXAMPLE
-        PS C:\> ConvertTo-OneLine -Payload $value1
+        PS C:\> Remove-Comments -Payload $value1
     
     .NOTES
         Additional information about the function.
@@ -62,8 +240,16 @@ function ConvertTo-OneLine {
         [Parameter(Mandatory = $true, Position = 0)]
         [System.Array]$Payload
     )
+    Begin {
+        [regex]$SLCPattern = '(?m)(?<!<)#(?!>).*$'
+        [regex]$MLCPattern = '(?ms)<#.*?#>'
+    }
     Process {
-        $Payload = $Payload -join ';'
+        # Single Line Comments
+        $Payload = $Payload -replace $SLCPattern
+
+        # Multi-Line Block Comments
+        $Payload = $Payload -replace $MLCPattern
     }
     End {
         return $Payload
@@ -94,78 +280,19 @@ Function Resolve-Aliases() {
         [System.String]$Payload
     )
     Begin {
-        $Aliases = ('%', 'ForEach-Object'), ('iex', 'Invoke-Expression'), ('pwd', 'Get-Location')
+        $PossibleAliases = Get-Alias
+        $Aliases = [System.Management.Automation.PSParser]::Tokenize($Payload,[ref]$null) | Where-Object {$_.Type -eq 'Command' -and $_.Content -in $PossibleAliases.Name} | Select-Object -ExpandProperty Content
+
     }
     Process {
         ForEach ($A in $Aliases) {       
-            [regex]$Pattern = "(?<!\$)$($A[0])"
-            $Payload = $Payload -replace $Pattern, "$($A[1])"
-        }
-    }
-    End {
-        return $Payload
-    }
-}
+            $ResolvedCommand = $PossibleAliases | Where-Object {$_.Name -eq "$A"} | Select -ExpandProperty ResolvedCommand | Select -ExpandProperty Name
+            $Payload = $Payload -replace "\b$A\b", $ResolvedCommand
 
-Function Format-SocketBeacons() {
-    <#
-    .SYNOPSIS
-        Identifies and replaces the socket listener details with beacon values.
-    
-    .DESCRIPTION
-        Identifies and replaces the socket listener details with beacon values in order to prevent conflicts with the integer-related functions.
-    
-    .PARAMETER Payload
-        The payload containing the PowerShell script to be converted.
-    
-    .PARAMETER IPAddress
-        The IPAddress switch is used to instruct the function to insert a beacon in the socket ip address.
-
-    .PARAMETER Port
-        The Port switch is used to instruct the function to insert a beacon in the socket port number.
-    
-    .EXAMPLE
-        PS C:\> Format-SocketBeacons -Payload 'value1' -IPAddress 'value1'
-
-    .EXAMPLE
-        PS C:\> Format-SocketBeacons -Payload 'value1' -IPAddress 'value1' -Port 'value1'
-    
-    .NOTES
-        Additional information about the function.
-    #>
-    [OutputType([System.String])]
-    param
-    (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [System.String]$Payload,
-        [switch]$IPAddress,
-        [switch]$Port
-    )
-    Begin {
-        $Occurrence = ($Payload | Select-String '("|'')\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}("|''),\d+' -AllMatches).Matches.Value
-    }
-    Process {  
-        Try {
-            if ($IPAddress) {
-                # Replace the socket ip address with a beacon value
-                $BeaconType = 'ip address'
-                $Payload = $Payload.replace(($Occurrence -split ',')[0], '<BEACON_IP>')
+            # Show Changes
+            if ($ShowChanges) {
+                Write-Host "    $A >> $ResolvedCommand"
             }
-
-            if ($Port) {
-                # Replace the socket port number with a beacon value
-                $BeaconType = 'port number'
-                $Payload = $Payload.replace(($Occurrence -split ',')[1], '<BEACON_Port>')
-            }
-        }
-        Catch [System.Management.Automation.MethodInvocationException ] {
-            # We need the ip and port to be in the following format or else it will be empty: "10.10.10.10",80
-            if ($($_.Exception.Message) -like '*String cannot be of zero length*') {
-                Write-Host "[!] Could not locate a socket $BeaconType - Skipping"
-            }
-        }
-        Catch {
-            Write-Host "[!] Error in $($MyInvocation.MyCommand.Name) - $($_.Exception.Message) - Type $($_.Exception.GetType().FullName) - Skipping"
         }
     }
     End {
@@ -260,6 +387,7 @@ Function Get-ObfuscatedVariable() {
                 $AlphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.ToCharArray() | Sort-Object { Get-Random }
                 $NewValue = '$' + ((0..(Get-Random -Minimum 1 -Maximum 25) | ForEach-Object { $AlphaNum[$(Get-Random -Minimum 0 -Maximum $AlphaNum.Count)] } ) -join '')
             }
+            
         }
     }
     End {
@@ -283,6 +411,8 @@ function Find-Variable() {
     
     .NOTES
         This function replaces each instance with a unique value across the board to ensure integrity with variable usage within the payload.
+        Yes, I know this is ugly to look at. This is a bit more of a pain when dealing with parameters from custom functions + variables. 
+        I initially ignored the variables that were also parameters from forementioned functions but found it helped slip by some signatures.
     #>
     [OutputType([System.String])]
     param
@@ -291,21 +421,67 @@ function Find-Variable() {
         [System.String]$Payload
     )
     Begin {
-        $Pattern = '(?<!\w)\$\w+'
-        $Occurrences = [regex]::Matches($Payload, $Pattern).Value | Where-Object { $_ -notlike '$_*' -and $_ -ne '$true' -and $_ -ne '$false' } | Select-Object -Unique
+        # Variables
+        #$Pattern = '(?<!\w)\$\w+'
+        #$Variables = [regex]::Matches($Payload, $Pattern).Value | Where-Object { $_ -notlike '$_*' -and $_ -ne '$true' -and $_ -ne '$false' } | Select-Object -Unique
+        $Variables = [System.Management.Automation.PSParser]::Tokenize($Payload,[ref]$null) | Where-Object {$_.Type -eq 'Variable' -and  $_.Content -notlike '$_*' -and $_ -ne '$true' -and $_ -ne '$false' } | Select-Object -ExpandProperty Content -Unique | % {'$' + $_}
+        
+        # Parametersa
+        $Pattern = '.PARAMETER\s(\w+)'
+        $Parameters = [regex]::Matches($Payload, $Pattern).Value | % { '$' + ($_ -split '\s')[1] }
+
+        # Do not touch the automatic variables
+        $Blacklist = '$_','$?', '$^', '$args', '$ConfirmPreference', '$ConsoleFileName', '$DebugPreference', '$Error', '$ErrorActionPreference', '$ErrorView', '$ExecutionContext', '$False','$false', '$FormatEnumerationLimit', '$HOME', '$Host', '$InformationPreference', '$input', '$LASTEXITCODE', '$MaximumAliasCount', '$MaximumDriveCount', '$MaximumErrorCount', '$MaximumFunctionCount', '$MaximumHistoryCount', '$MaximumVariableCount', '$MyInvocation', '$NestedPromptLevel', '$null','$NULL', '$OutputEncoding', '$PID', '$PROFILE', '$ProgressPreference', '$PSBoundParameters', '$PSCommandPath', '$PSCulture', '$PSDefaultParameterValues', '$PSEdition', '$PSEmailServer', '$PSHOME', '$PSScriptRoot', '$PSSessionApplicationName', '$PSSessionConfigurationName', '$PSSessionOption', '$PSUICulture', '$PSVersionTable', '$PWD', '$ShellId', '$StackTrace', '$True', '$true', '$VerbosePreference', '$WarningPreference', '$WhatIfPreference'
+        
+        # Misc blacklisted variable names
+        $Blacklist = $Blacklist + '$Position', '$Ocpffset', '$MarshalAs', '$DllName', '$FunctionName', '$EntryPoint', '$ReturnType', '$ParameterTypes', '$NativeCallingConvention', '$Charset', '$SetLastError', '$Namespace'
+        # '$Module'
+        # Final list work from
+        #$Variables = Compare-Object -ReferenceObject $Blacklist -DifferenceObject $Variables | ? { $_.SideIndicator -eq '=>' } | Select -ExpandProperty InputObject
+        $Variables = $Variables | Where-Object {$_ -notin $Blacklist}
     }
     Process { 
         Try { 
-            # For each occurence, replace it with an obfuscated value
-            ForEach ($O in $Occurrences) {
+            $Occurrences = Compare-Object -ReferenceObject $Parameters -DifferenceObject $Variables -IncludeEqual
+            
+            # Parameters
+            $Occurrences | ? { $_.SideIndicator -eq '==' } | % {
                 $NewValue = Get-ObfuscatedVariable
-                $Payload = $Payload -replace [Regex]::Escape($O), $NewValue
+                
+                # Variable Declaration of Parameter
+                $ToReplace = $($_.InputObject)
+                $Pattern = '\{0}\b' -f $ToReplace
+                $Payload = $Payload -replace $Pattern, $NewValue 
+                
+                # Parameter Declaration
+                $ToReplace = $($_.InputObject) -replace '\$', '-'
+                $ReplaceWith = $($NewValue -replace '\$', '-')
+
+                $Pattern = '{0}\b' -f $ToReplace
+                $Payload = $Payload -replace $Pattern, $ReplaceWith
+
+                # Will always show these changes to help people in the event they need to know the new parameter names
+                if ($ShowChanges) {
+                    Write-Host "$ToReplace is now $ReplaceWith"
+                } else {
+                    Write-Host "[-] $ToReplace is now $ReplaceWith"
+                }
+            }
+            
+            # Variables    
+            $Occurrences | ? { $_.SideIndicator -eq '=>' } | % {
+                $NewValue = Get-ObfuscatedVariable               
+                $ToReplace = $($_.InputObject)              
+                $Pattern = '\{0}\b' -f $ToReplace
+                $Payload = $Payload -replace $Pattern, $NewValue 
 
                 # Show Changes
                 if ($ShowChanges) {
-                    Write-Host "$O >> $NewValue"
+                    Write-Host "$($_.InputObject) >> $NewValue"
                 }
             }
+        
+            
         }
         Catch {
             Write-Host "[!] $($MyInvocation.MyCommand.Name) Error - $($_.Exception.Message) - Skipping"
@@ -399,18 +575,15 @@ function Find-Cmdlet() {
         [System.String]$Payload
     )
     Begin {
-        $Occurrences = Get-Command | Where-Object { $_.name -like "*-*" } | Select-Object -ExpandProperty Name | ForEach-Object { 
-            if ($Payload -like "*$_*") { 
-                $_ 
-            } 
-        }
+        $PossibleCmdlets = Get-Command | Where-Object { $_.name -like "*-*" } | Select-Object -ExpandProperty Name
+        $Occurrences = [System.Management.Automation.PSParser]::Tokenize($Payload,[ref]$null) | Where-Object {$_.Type -eq 'Command' -and $_.Content -in $PossibleCmdlets} | Select-Object -ExpandProperty Content
     }
     Process {  
         try {
             # For each occurence, replace it with a beacon value
             $Occurrences | ForEach-Object {
                 $Beacon = New-EncodedBeacon -Value $_
-                [regex]$Pattern = "(?<!<obfu%)$_(?!%cate>)"
+                [regex]$Pattern = "(?<!<obfu%)\b$_\b(?!%cate>)"
                 $Payload = $Pattern.replace($Payload, $Beacon)
             }
 
@@ -592,6 +765,7 @@ function Get-ObfuscatedNamespace() {
         return $NewValue
     }
 }
+
 function Find-Namespace() {
     <#
     .SYNOPSIS
@@ -642,148 +816,6 @@ function Find-Namespace() {
         }
         Catch {
             Write-Host "[!] $($MyInvocation.MyCommand.Name) Error - $($_.Exception.Message) - Skipping"
-        }
-    }
-    End {
-        return $Payload
-    }
-}
-
-Function Get-ObfuscatedIpAddress() {
-    <#
-    .SYNOPSIS
-        Genenerates a new IP address variation
-    
-    .DESCRIPTION
-        Genenerates a new IP address variation using a randomly selected algorithm.
-
-    .PARAMETER IPAddress
-        The IP address that will be replaced within the given payload.
-    
-    .EXAMPLE
-        PS C:\> Get-ObfuscatedIpAddress -IPAddress 'value1'
-    
-    .NOTES
-        Additional information about the function.
-    #>
-    [OutputType([System.String])]
-    param
-    (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [System.String]$IPAddress
-    )
-    Begin {
-        $Picker = 1..2 | Get-Random
-        If ($ShowChanges) {
-            Write-Host -NoNewline "    Generator $($Picker) >> "
-        }
-    }
-    Process {
-        Switch ($Picker) {
-            1 {
-                $randomSet = 1..4 | ForEach-Object { (((48..57) + (65..90) + (97..122) | Get-Random -Count (5..25 | Get-Random) | ForEach-Object { [char]$_ }) -join '') }
-                $validSet = $ipAddress.split('.')
-                $stage1 = '"' + ($randomSet -join '.') + '"'
-                0..3 | ForEach-Object {
-                    $ro = $($randomSet[$_])
-                    $vo = $($validSet[$_])
-                    $stage2 += ".replace('$ro',$vo)"
-                }
-                $newValue = "$stage1.replace$(($Stage2 -split '.replace' | Where-Object {$_} | sort-object {get-random}) -join '.replace')"
-            }
-            2 {
-                $Delimiter = ('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.ToCharArray() | Get-Random -Count (1..10 | Get-Random)) -join ''
-                $Value = ($Delimiter + ($IPAddress.Split('.') -join $Delimiter) + $Delimiter)
-                $Reversed = @()
-                ($Value.length - 1)..0 | ForEach-Object {
-                    $Reversed += $Value[$_]
-                }
-                $Reversed = $Reversed -join ''
-                $NewValue = '$($($Value = ''<OBFUSCATED>'' -split '''');$(((($Value.length-1)..0 | % { $Value[$_]}) -join '''') -replace ''<DELIMITER>'',''.'' -replace ''\.$|^\.''))' -replace '<OBFUSCATED>', $Reversed -replace '<DELIMITER>', $Delimiter
-            }
-        }
-    }
-    End {
-        return $NewValue
-    }
-}
-
-function Find-Listener() {
-    <#
-    .SYNOPSIS
-        Identifies and replaces the IP and Port values for the reverse shell listener.
-    
-    .DESCRIPTION
-        Peforms a regex search for the IP and Port declaration ("IP", Port) within the payload and replaces each instance with a new value.
-    
-    .PARAMETER Payload
-        The payload containing the PowerShell script to be converted.
-    
-    .PARAMETER Port
-        The user provided port for the reverse shell listener.
-    
-    .PARAMETER IPAddress
-        The user provided IP address for the reverse shell listener.
-
-    .PARAMETER Plain
-        This switch is used to instruct the function to not obfuscate the listener ip and port values.
-    
-    .EXAMPLE
-        PS C:\> Find-Listener -Payload 'value1' -Port 'value2' -IPAddress 'value3'
-    
-    .NOTES
-        This assumes the IP address and port within the payload is structured as ("10.10.10.10",80)
-    #>
-    [OutputType([System.String])]
-    param
-    (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [System.String]$Payload,
-        [Parameter(Mandatory = $true, Position = 1)]
-        [System.String]$Port,
-        [Parameter(Mandatory = $true, Position = 2)]
-        [System.String]$IPAddress,
-        [switch]$Plain
-    )
-    Begin {
-        $BeaconIP = '<BEACON_IP>'
-        $BeaconPort = '<BEACON_Port>'
-    }
-    Process {  
-        Try {
-            if (!$Plain) {
-                # Replace the ip address of the listener
-                $NewIPAddress = Get-ObfuscatedIpAddress -IPAddress $IPAddress
-
-                # Show Changes
-                if ($ShowChanges) {
-                    Write-Host "$IPAddress >> $NewIPAddress"
-                }  
-        
-                # Replace the port of the listener
-                $NewPort = Get-ObfuscatedInteger -Integer $Port
-
-                # Show Changes
-                if ($ShowChanges) {
-                    Write-Host "$Port >> $NewPort"
-                }  
-
-                # Replace the place holder ip and port with obfuscated user-provided values
-                $Payload = $Payload.replace($BeaconIP, $NewIPAddress).replace($BeaconPort, $NewPort)        
-            }
-            else {
-                # Replace the place holder ip and port with the user-provided values
-                $Payload = $Payload.replace($BeaconIP, '"' + $IPAddress + '"').replace($BeaconPort, $Port)
-            }
-        }
-        Catch [System.Management.Automation.MethodInvocationException ] {
-            # We need the ip and port to be in the following format or else it will be empty: "10.10.10.10",80
-            if ($($_.Exception.Message) -like '*String cannot be of zero length*') {
-                Write-Host '[!] Could not locate a socket tcpclient ip and port declaration - Skipping'
-            }
-        }
-        Catch {
-            Write-Host "[!] Error in $($MyInvocation.MyCommand.Name) - $($_.Exception.Message) - Type $($_.Exception.GetType().FullName) - Skipping"
         }
     }
     End {
@@ -873,6 +905,8 @@ function Find-String() {
     
     .NOTES
         This replaces each instance with a unique value by inserting unique beacon values that get replaced.
+        This component can be quite trick to obfuscate through scripting magic with advanced payloads. 
+        I want to improve this process down the road.
     #>
     Param (
         [Parameter(Mandatory = $true, Position = 0)]
@@ -1054,17 +1088,15 @@ function Find-Integer() {
         [System.String]$Payload
     )
     Begin {
-        $Count = 1
-        $Occurrences = (($Payload | Select-String '(?:\d{1,3}\.){3}\d{1,3}|(?<!\w|\$|%%)(?<!\&)\d+(?!>|%)' -AllMatches)).Matches.Value
+        $Occurrences = [System.Management.Automation.PSParser]::Tokenize($Payload,[ref]$null) | Where-Object {$_.Type -eq 'Number' -and $_.content -ne 0} | Select-Object -ExpandProperty Content
     }
     Process {  
         Try {
             # For each occurence, replace it with a beacon value
             $Occurrences | ForEach-Object {
                 $Beacon = New-EncodedBeacon -Value $_
-                [regex]$Pattern = '(?:\d{1,3}\.){3}\d{1,3}|(?<!\w|\$|%%)(?<!\&)\d+(?!>|%)'
+                [regex]$Pattern = "(?<!\w|\$){0}" -f $_
                 $Payload = $Pattern.replace($Payload, $Beacon, 1)
-                $Count++
             }
 
             # For each occurence, replace it with an obfuscated value
@@ -1112,7 +1144,7 @@ Function Get-ObfuscatedInteger() {
         [System.String]$Integer
     )
     Begin {
-        $Picker = 1..2 | Get-Random
+        $Picker = 1..3 | Get-Random
         If ($ShowChanges) {
             Write-Host -NoNewline "    Generator $($Picker) >> "
         }
@@ -1149,6 +1181,14 @@ Function Get-ObfuscatedInteger() {
                 else {
                     $NewValue = '$' + "($NewValue)"   
                 }
+            }
+            3 {
+                # Generates a two random strings by selecting at random, up to 10 characters from the given character set. The integer value will be placed in the of the string.
+                # The string is the appended with a regex replace within in a grouping constructor so that when excuted the original integer is evaluated. 
+                $FirstHalf = ''''+(('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.ToCharArray() | Get-Random -Count (1..10 | Get-Random) | ForEach-Object { $_ }) -join '')
+                $SecondHalf = (('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.ToCharArray() | Get-Random -Count (1..10 | Get-Random) | ForEach-Object { $_ }) -join '') + ''''
+                $NewValue = Get-OperatorEncapsulation -Value $($FirstHalf + $Integer + $SecondHalf + ' -Replace "[^0-9]"')
+                
             }
         }
     }
@@ -1256,196 +1296,5 @@ function Get-ObfuscatedMethod() {
     }
     end {
         return $NewValue
-    }
-}
-
-Function Invoke-PSObfuscation() {
-    <#
-    .SYNOPSIS
-        Transforms PowerShell scripts into something obscure, unclear, or unintelligible.
-    
-    .DESCRIPTION
-        Where most obfuscation tools tend to add layers to encapsulate standing code, such as base64 or compression, 
-        they tend to leave the intended payload intact, which essentially introduces chokepoints. Invoke-PSObfuscation 
-        focuses on replacing the existing components of your code, or layer 0, with alternative values. 
-    
-    .PARAMETER Path
-        A user provided PowerShell payload via a flat file.
-    
-    .PARAMETER IPAddress
-        The user provided IP address for the reverse shell listener.
-
-    .PARAMETER Port
-        The user provided port for the reverse shell listener.
-    
-    .PARAMETER All
-        The all switch is used to instruct the function to obfuscate each supported component.
-        
-    .PARAMETER Aliases
-        The aliases switch is used to instruct the function to obfuscate aliases.
-
-    .PARAMETER Cmdlets
-        The cmdlets switch is used to instruct the function to obfuscate cmdlets.
-
-    .PARAMETER Listener
-        The listener switch is used to instruct the function to obfuscate the listener ip and port.
-
-    .PARAMETER Methods
-        The methods switch is used to instruct the function to obfuscate method invocations.
-
-    .PARAMETER NamespaceClasses
-        The namespaceclasses switch is used to instruct the function to obfuscate namespace classes.
-    
-    .PARAMETER Pipes
-        The pipes switch is used to instruct the function to obfuscate pipes.
-
-    .PARAMETER PipelineVariables
-        The pipeline variables switch is used to instruct the function to obfuscate pipeline variables.
-
-    .PARAMETER ShowChanges
-        The ShowChanges switch is used to instruct the script to display the raw and obfuscated values on the screen.
-
-    .PARAMETER Strings
-        The strings switch is used to instruct the function to obfuscate prompt strings.
-  
-    .PARAMETER Variables
-        The variables switch is used to instruct the function to obfuscate variables.
-
-    .EXAMPLE
-        PS C:\> Invoke-PSObfuscation -Path .\payload.ps1 -IPAddress '192.168.54.197' -Port '443' -All
-    
-    .EXAMPLE
-        PS C:\> Invoke-PSObfuscation -Path .\payload.ps1 -IPAddress '192.168.54.197' -Port '443' -Variables -Cmdlets -OutFile newfile.ps1
-    
-    .OUTPUTS
-        System.String, System.String
-    
-    .NOTES
-        Additional information about the function.
-    #>
-    [CmdletBinding()]
-    [OutputType([System.String])]
-    param
-    (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [System.String]$Path,
-        [Parameter(Mandatory = $true, Position = 0)]
-        [System.String]$Port,
-        [Parameter(Mandatory = $true, Position = 1)]
-        [System.String]$IPAddress,
-        [Parameter(Mandatory = $false, Position = 2)]
-        [System.String]$Outfile = (Join-Path -Path $(Get-Location) -ChildPath 'obfuscated.ps1'),
-        [switch]$All,
-        [switch]$Aliases,
-        [switch]$Cmdlets,
-        [switch]$Methods,
-        [switch]$Integers,
-        [switch]$Listener,
-        [switch]$NamespaceClasses,
-        [switch]$ShowChanges,
-        [switch]$Pipes,
-        [switch]$PipelineVariables,
-        [switch]$Strings,
-        [switch]$Variables
-    )
-    Begin {
-        Write-Output ''
-        Write-Output '     >> Layer 0 Obfuscation'
-        Write-Output '     >> https://github.com/gh0x0st'
-        Write-Output ''
-
-        $Content = [System.IO.File]::ReadAllLines( ( Resolve-Path $Path )) 
-
-    }
-    Process {
-        # Check if we are using at least one parameter
-        if (!($All -or $Aliases -or $Methods -or $Strings -or $Variables -or $Pipes -or $Cmdlets -or $Integers -or $NamespaceClasses -or $PipelineVariables -or $Listener) ) {
-            Write-Output '[!] You must include at least one switch parameter'
-            Write-Output ''
-            break
-        }
-
-        # Always to ensure payload is converted to a single line and output as a string
-        Write-Output '[*] Converting into a single line'
-        $Obfuscated = ConvertTo-OneLine -Payload $Content
-
-        ## Insert socket ip address and port number beacons to prevent formatting conflicts from other functions
-        Write-Output '[*] Inserting socket beacons'
-        $Obfuscated = Format-SocketBeacons -Payload $Obfuscated -IPAddress -Port
-
-        # Are we running everything?
-        if ($All) {
-            $Aliases = $true
-            $Cmdlets = $true
-            $Integers = $true
-            $Listener = $true
-            $Methods = $true
-            $NamespaceClasses = $true
-            $Pipes = $true
-            $PipelineVariables = $true
-            $Strings = $true
-            $Variables = $true
-        }
-
-        # Obfuscate the things with the code
-        if ($Aliases) {
-            Write-Output '[*] Resolving aliases'
-            $Obfuscated = Resolve-Aliases -Payload $Obfuscated 
-        } 
-
-        if ($Strings) {
-            Write-Output '[*] Obfuscating strings'
-            $Obfuscated = Find-String -Payload $Obfuscated
-        }
-
-        if ($NamespaceClasses) {
-            Write-Output "[*] Obfuscating namespace classes"
-            $Obfuscated = Find-NameSpace -Payload $Obfuscated
-        }
-
-        if ($Cmdlets) {
-            Write-Output "[*] Obfuscating cmdlets"
-            $Obfuscated = Find-Cmdlet -Payload $Obfuscated
-        }
-
-        if ($Pipes) {
-            Write-Output "[*] Obfuscating pipes"
-            $Obfuscated = Find-Pipe -Payload $Obfuscated
-        }
-
-        if ($PipelineVariables) {
-            Write-Output "[*] Obfuscating pipeline variables"
-            $Obfuscated = Find-PipelineVariable -Payload $Obfuscated
-        }
-
-        if ($Variables) {
-            Write-Output "[*] Obfuscating variables"
-            $Obfuscated = Find-Variable -Payload $Obfuscated
-        }
-
-        if ($Methods) {
-            Write-Output '[*] Obfuscating method invocations'
-            $Obfuscated = Find-Method -Payload $Obfuscated
-        }
-
-        if ($Integers) {
-            Write-Output "[*] Obfuscating integers"
-            $Obfuscated = Find-Integer -Payload $Obfuscated
-        }
-
-        if ($Listener) {
-            Write-Output '[*] Obfuscating socket listener ip and port'
-            $Obfuscated = Find-Listener -Payload $Obfuscated -Port $Port -IPAddress $IPAddress 
-        }
-        else {
-            Write-Output '[*] Restoring socket listener ip and port without obfuscation'
-            $Obfuscated = Find-Listener -Payload $Obfuscated -Port $Port -IPAddress $IPAddress -Plain
-        }
-    }
-    End {
-        $Obfuscated | Out-File $Outfile
-        Write-Output "[*] Writing payload to $Outfile"
-        Write-Output '[*] Done'
-        Write-Output ""
     }
 }
