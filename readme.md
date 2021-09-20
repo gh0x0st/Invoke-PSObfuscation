@@ -42,6 +42,12 @@ Switch ($Picker) {
 }
 ```
 
+## Coming Soon
+
+* Building out a cleaner Find-Variables function that will utilize [System.Management.Automation.PSParser]
+* Building out a safer version of Find-String which will include logic to skip massive strings
+* A reference guide on how to approach obfuscating larger and more complex payloads
+
 ## Requirements
 
 This framework and resulting payloads have been tested on the following operating system and PowerShell versions. 
