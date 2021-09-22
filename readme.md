@@ -9,7 +9,11 @@ https://www.offensive-security.com/offsec/powershell-obfuscation/
 
 ## Components
 
-Like many other programming languages, PowerShell can be broken down into many different components that make up the executable logic. This allows us to defeat signature-based detections with relative ease by changing how we represent individual components within a payload to a form an obscure or unintelligible derivative. Keep in mind that targeting every component in complex payloads is very instrusive. This tool is built so that you can target the components you want to obfuscate in a controlled manner. 
+Like many other programming languages, PowerShell can be broken down into many different components that make up the executable logic. This allows us to defeat signature-based detections with relative ease by changing how we represent individual components within a payload to a form an obscure or unintelligible derivative. 
+
+Keep in mind that targeting every component in complex payloads is very instrusive. This tool is built so that you can target the components you want to obfuscate in a controlled manner. I have found that a lot of signatures can be defeated simply by targeting cmdlets, variables and any comments. 
+
+Component types such as pipes and pipeline variables are introduced here to help make your payload more obscure and harder to decode. 
 
 **Supported Types**
 
@@ -58,6 +62,7 @@ The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's th
 
 * Building out a cleaner Find-Variables function that will utilize [System.Management.Automation.PSParser]
 * Building out a safer version of Find-String which will include logic to skip massive strings
+* Building out more integer generators
 * Adding component support for custom function names
 
 ## Usage Examples
