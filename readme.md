@@ -2,7 +2,7 @@
 
 Traditional obfuscation techniques tend to add layers to encapsulate standing code, such as base64 or compression. These payloads do continue to have a varied degree of success, but they have become trivial to extract the intended payload and some launchers get detected often, which essentially introduces chokepoints.
 
-The approach this tool introduces is a methodology where you can target and obfuscated the individual components of a script with randomized variations while achieving the same intended logic without encapsulating the entire payload within a single layer.
+The approach this tool introduces is a methodology where you can target and obfuscate the individual components of a script with randomized variations while achieving the same intended logic, without encapsulating the entire payload within a single layer.
 
 I wrote a blog piece for Offensive Security as a precursor into the techniques this tool introduces. Before venturing further, consider giving it a read first:
 https://www.offensive-security.com/offsec/powershell-obfuscation/
