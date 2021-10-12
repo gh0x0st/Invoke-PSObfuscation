@@ -63,6 +63,7 @@ The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's th
 * Building out a cleaner Find-Variables function that will utilize [System.Management.Automation.PSParser]
 * Building out a safer version of Find-String which will include logic to skip massive strings
 * Building out more integer generators
+* Improving the regex around Find-Namespace 
 * Adding component support for custom function names
 
 ## Usage Examples
