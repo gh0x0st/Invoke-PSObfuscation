@@ -2,7 +2,7 @@
 
 Traditional obfuscation techniques tend to add layers to encapsulate standing code, such as base64 or compression. These payloads do continue to have a varied degree of success, but they have become trivial to extract the intended payload and some launchers get detected often, which essentially introduces chokepoints.
 
-The approach this tool introduces is a methodology where you can target and obfuscate the individual components of a script with randomized variations while achieving the same intended logic, without encapsulating the entire payload within a single layer.
+The approach this tool introduces is a methodology where you can target and obfuscate the individual components of a script with randomized variations while achieving the same intended logic, without encapsulating the entire payload within a single layer. While this script can obfuscate most payloads successfully on it's own, this project will also serve as a standing framework that I will to use to produce future functions that will utilize this framework to provide dedicated obfuscated payloads, such as one that only produces reverse shells.
 
 I wrote a blog piece for Offensive Security as a precursor into the techniques this tool introduces. Before venturing further, consider giving it a read first:
 https://www.offensive-security.com/offsec/powershell-obfuscation/
@@ -11,7 +11,7 @@ https://www.offensive-security.com/offsec/powershell-obfuscation/
 
 Like many other programming languages, PowerShell can be broken down into many different components that make up the executable logic. This allows us to defeat signature-based detections with relative ease by changing how we represent individual components within a payload to a form an obscure or unintelligible derivative. 
 
-Keep in mind that targeting every component in complex payloads is very instrusive. This tool is built so that you can target the components you want to obfuscate in a controlled manner. I have found that a lot of signatures can be defeated simply by targeting cmdlets, variables and any comments. 
+Keep in mind that targeting every component in complex payloads is very instrusive. This tool is built so that you can target the components you want to obfuscate in a controlled manner. I have found that a lot of signatures can be defeated simply by targeting cmdlets, variables and any comments. When using this against complex payloads, such as print nightmare, keep in mind that custom function parameters / variables will also be changed. Always be sure to properly test any resulting payloads and ensure you are aware of any modified named paramters.
 
 Component types such as pipes and pipeline variables are introduced here to help make your payload more obscure and harder to decode. 
 
@@ -57,14 +57,6 @@ This framework and resulting payloads have been tested on the following operatin
 | 5.1.21996.1 | Windows 11 10.0.21996 | Supported | Supported
 
 The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's the love for the older versions of PowerShell?_ Initially, my intention was to design this for the newer version of PowerShell. Depending on how well this tool is received, I am planning on making PowerShell v2.0 derivative of this tool called `Invoke-PS2Obfuscation`. 
-
-## Coming Soon
-
-* Building out a cleaner Find-Variables function that will utilize [System.Management.Automation.PSParser]
-* Building out a safer version of Find-String which will include logic to skip massive strings
-* Building out more integer generators
-* Improving the regex around Find-Namespace 
-* Adding component support for custom function names
 
 ## Usage Examples
 
