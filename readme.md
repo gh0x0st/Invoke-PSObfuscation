@@ -48,7 +48,7 @@ Switch ($Picker) {
 
 ## Requirements
 
-This framework and resulting payloads have been tested on the following operating system and PowerShell versions. 
+This framework and resulting payloads have been tested on the following operating system and PowerShell versions. The resulting reverse shells will not work on PowerShell v2.0
 
 | PS Version | OS Tested | Invoke-PSObfucation.ps1 | Reverse Shell
 | -------------- | :--------- | :--------- | :--------- |
@@ -56,7 +56,9 @@ This framework and resulting payloads have been tested on the following operatin
 | 5.1.19041.1023 | Windows 10 10.0.19042 | Supported | Supported
 | 5.1.21996.1 | Windows 11 10.0.21996 | Supported | Supported
 
-The resulting reverse shells will not work on PowerShell v2.0. _Woah, where's the love for the older versions of PowerShell?_ Initially, my intention was to design this for the newer version of PowerShell. Depending on how well this tool is received, I am planning on making PowerShell v2.0 derivative of this tool called `Invoke-PS2Obfuscation`. 
+_Update 07/23/2022_
+
+The `replace method` I use to replace beacons with their obfuscated values is broken on PowerShell version 7.2.5. I am looking into whether there's a fix with the .net method or if I need to code a new solution.
 
 ## Usage Examples
 
