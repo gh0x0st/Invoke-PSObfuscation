@@ -56,10 +56,6 @@ This framework and resulting payloads have been tested on the following operatin
 | 5.1.19041.1023 | Windows 10 10.0.19042 | Supported | Supported
 | 5.1.21996.1 | Windows 11 10.0.21996 | Supported | Supported
 
-_Update 07/23/2022_
-
-The `replace method` I use to replace beacons with their obfuscated values is broken on PowerShell version 7.2.5. I am looking into whether there's a fix with the .net method or if I need to code a new solution.
-
 ## Usage Examples
 
 ### CVE-2021-34527 (PrintNightmare)
