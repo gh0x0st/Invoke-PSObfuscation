@@ -7,6 +7,13 @@ The approach this tool introduces is a methodology where you can target and obfu
 I wrote a blog piece for Offensive Security as a precursor into the techniques this tool introduces. Before venturing further, consider giving it a read first:
 https://www.offensive-security.com/offsec/powershell-obfuscation/
 
+## Dedicated Payloads
+
+As part of my on going work with PowerShell obfuscation, I am building out scripts that produce dedicated payloads that utilize this framework. These have helped to save me time and hope you find them useful as well. You can find these within their own folders within this repository.
+
+1. Get-ReverseShell
+2. Get-DownloadCradle
+
 ## Components
 
 Like many other programming languages, PowerShell can be broken down into many different components that make up the executable logic. This allows us to defeat signature-based detections with relative ease by changing how we represent individual components within a payload to a form an obscure or unintelligible derivative. 
