@@ -2,8 +2,6 @@
 
 Get-ReverseShell is a project that stems from the Invoke-PSObfuscation framework, with the sole purpose of producing obfuscated reverse shells for PowerShell. With the way this framework is built, each component of the original payload goes through a randomly selected generator, resulting in a different yield with every execution of this script. 
 
-Due to the complexity of the obfuscation logic, the resulting payloads will be very difficult to signature and will slip past heuristic engines that are not programmed to emulate the inherited logic.
-
 ___IMPORTANT___
 
 Despite this script being built on Kali, you can also use it on Windows to produce these payloads. While I encourage you to keep this script on Kali, I have added some safeguards for those that will store this on a system with Antivirus installed, such as Windows with Defender enabled.
