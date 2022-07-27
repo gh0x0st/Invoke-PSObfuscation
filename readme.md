@@ -9,7 +9,7 @@ https://www.offensive-security.com/offsec/powershell-obfuscation/
 
 ## Dedicated Payloads
 
-As part of my on going work with PowerShell obfuscation, I am building out scripts that produce dedicated payloads that utilize this framework. These have helped to save me time and hope you find them useful as well. You can find these within their own folders within this repository.
+As part of my on going work with PowerShell obfuscation, I am building out scripts that produce dedicated payloads that utilize this framework. These have helped to save me time and hope you find them useful as well. You can find them within their own folders at the root of this repository.
 
 1. Get-ReverseShell
 2. Get-DownloadCradle
