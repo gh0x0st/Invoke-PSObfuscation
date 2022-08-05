@@ -15,6 +15,7 @@ As part of my on going work with PowerShell obfuscation, I am building out scrip
 
 1. Get-ReverseShell
 2. Get-DownloadCradle
+3. Get-Shellcode
 
 ## Components
 
